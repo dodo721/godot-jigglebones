@@ -1,5 +1,8 @@
 @tool
 extends Node3D
+
+class_name JiggleBone;
+
 enum Axis {
 	X_Plus, Y_Plus, Z_Plus, X_Minus, Y_Minus, Z_Minus
 }
@@ -14,13 +17,7 @@ enum Axis {
 			var temp_bone_id = skeleton.find_bone(bone_name)
 			if temp_bone_id != -1:
 				bone_id = temp_bone_id
-			
-		
-@export_range(0.1,100,0.1) var stiffness: float = 1
-@export_range(0,100,0.1) var damping: float = 0
-@export var use_gravity: bool = false
-@export var gravity := Vector3(0, -9.81, 0)
-@export var forward_axis: Axis = Axis.Z_Minus
+@export var settings : JiggleSettings;
 @export_node_path("CollisionShape3D") var collision_shape: NodePath 
 
 var skeleton: Skeleton3D
@@ -78,12 +75,12 @@ func _physics_process(delta) -> void:
 	var grav: Vector3 = (bone_transf_rest_world.basis *get_bone_forward_local()).normalized() * 9.81
 	var vel: Vector3 = (global_transform.origin - prev_pos) / delta
 
-	if use_gravity:
-		grav = gravity
+	if settings.use_gravity:
+		grav = settings.gravity
 
-	grav *= stiffness
+	grav *= settings.stiffness
 	vel += grav 
-	vel -= vel * damping * delta  # Damping
+	vel -= vel * settings.damping * delta  # Damping
 
 	prev_pos = global_transform.origin
 	global_transform.origin += vel * delta
@@ -126,7 +123,7 @@ func _physics_process(delta) -> void:
 
 
 func get_bone_forward_local() -> Vector3:
-	match forward_axis:
+	match settings.forward_axis:
 		Axis.X_Plus: return Vector3(1,0,0)
 		Axis.Y_Plus: return Vector3(0,1,0)
 		Axis.Z_Plus: return Vector3(0,0,1)
